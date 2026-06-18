@@ -174,8 +174,81 @@ public class CPUScheduling {
     }
 
     public static void runRoundRobin(List<Process> processes, int quantum) {
-        System.out.println("[STUB] Round Robin scheduling not implemented yet.");
-        // TODO: circular queue, run min(quantum, remaining) per turn
+        System.out.println("\n--- Round Robin Scheduling (Quantum: " + quantum + "s) ---");
+        
+        if (processes == null || processes.isEmpty()) {
+            System.out.println("No processes to schedule.");
+            return;
+        }
+
+        int n = processes.size();
+        // Sort initially by arrival time to properly handle initialization
+        processes.sort((p1, p2) -> Integer.compare(p1.arrivalTime, p2.arrivalTime));
+
+        java.util.Queue<Process> readyQueue = new java.util.LinkedList<>();
+        List<Process> completedProcesses = new ArrayList<>();
+        boolean[] inQueue = new boolean[n];
+
+        int currentTime = processes.get(0).arrivalTime;
+        readyQueue.add(processes.get(0));
+        inQueue[0] = true;
+
+        int totalWaitingTime = 0;
+        int totalTurnaroundTime = 0;
+
+        System.out.println("\nGantt Chart Timeline:");
+        System.out.print("|");
+
+        while (!readyQueue.isEmpty()) {
+            Process p = readyQueue.poll();
+            
+            // Determine runtime duration (min of quantum or remaining time)
+            int executionTime = Math.min(quantum, p.remainingTime);
+            System.out.print(" P" + p.pid + " (" + executionTime + "s) |");
+
+            p.remainingTime -= executionTime;
+            currentTime += executionTime;
+
+            // 1. Check for newly arrived processes during this execution window and queue them
+            for (int i = 0; i < n; i++) {
+                Process nextP = processes.get(i);
+                if (nextP.arrivalTime <= currentTime && !inQueue[i] && nextP.remainingTime > 0) {
+                    readyQueue.add(nextP);
+                    inQueue[i] = true;
+                }
+            }
+
+            // 2. If current process is finished, calculate metrics
+            if (p.remainingTime == 0) {
+                p.completionTime = currentTime;
+                p.turnaroundTime = p.completionTime - p.arrivalTime;
+                p.waitingTime = p.turnaroundTime - p.burstTime;
+
+                totalWaitingTime += p.waitingTime;
+                totalTurnaroundTime += p.turnaroundTime;
+                completedProcesses.add(p);
+            } else {
+                // If it still has burst time remaining, send it to the back of the queue
+                readyQueue.add(p);
+            }
+
+            // 3. System Idle handling: if queue is empty but total jobs aren't done
+            if (readyQueue.isEmpty() && completedProcesses.size() < n) {
+                for (int i = 0; i < n; i++) {
+                    if (processes.get(i).remainingTime > 0) {
+                        System.out.print(" IDLE (" + (processes.get(i).arrivalTime - currentTime) + "s) |");
+                        currentTime = processes.get(i).arrivalTime;
+                        readyQueue.add(processes.get(i));
+                        inQueue[i] = true;
+                        break;
+                    }
+                }
+            }
+        }
+        System.out.println(" (End: " + currentTime + "s)");
+
+        // Print final statistics table
+        printSchedulingTable(completedProcesses, totalWaitingTime, totalTurnaroundTime);
     }
 
     public static void runPriority(List<Process> processes) {
