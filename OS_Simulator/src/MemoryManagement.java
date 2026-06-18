@@ -77,13 +77,107 @@ public class MemoryManagement {
 
     }
 
+
+
     public static void runBestFit(List<MemoryBlock> blocks, List<Integer> processSizes) {
-        System.out.println("[STUB] Best Fit allocation not implemented yet.");
-        // TODO: for each process, find smallest free block with size >= process size
+        System.out.println("\n--- Best Fit Allocation ---");
+
+        for (int i = 0; i < processSizes.size(); i++) {
+            int processSize = processSizes.get(i);
+            int processId = i + 1;
+
+            MemoryBlock block = findBestFit(blocks, processSize);
+
+            if (block != null) {
+                block.free = false;
+                block.processId = processId;
+                block.processSize = processSize;
+                System.out.println("Process " + processId + " (" + processSize + ") -> Block " + block.id);
+            } else {
+                System.out.println("Process " + processId + " (" + processSize + ") -> NOT PLACED (no suitable block)");
+            }
+        }
+
+        printMemoryMap(blocks);
+        printFragmentation(blocks);
+    }
+
+    private static MemoryBlock findBestFit(List<MemoryBlock> blocks, int processSize) {
+        MemoryBlock bestBlock = null;
+
+        for (MemoryBlock block : blocks) {
+            if (block.free && block.size >= processSize) {
+                if (bestBlock == null || block.size < bestBlock.size) {
+                    bestBlock = block;
+                }
+            }
+        }
+
+        return bestBlock;
     }
 
     public static void runWorstFit(List<MemoryBlock> blocks, List<Integer> processSizes) {
-        System.out.println("[STUB] Worst Fit allocation not implemented yet.");
-        // TODO: for each process, find largest free block with size >= process size
+        System.out.println("\n--- Worst Fit Allocation ---");
+
+        for (int i = 0; i < processSizes.size(); i++) {
+            int processSize = processSizes.get(i);
+            int processId = i + 1;
+
+            MemoryBlock block = findWorstFit(blocks, processSize);
+
+            if (block != null) {
+                block.free = false;
+                block.processId = processId;
+                block.processSize = processSize;
+                System.out.println("Process " + processId + " (" + processSize + ") -> Block " + block.id);
+            } else {
+                System.out.println("Process " + processId + " (" + processSize + ") -> NOT PLACED (no suitable block)");
+            }
+        }
+
+        printMemoryMap(blocks);
+        printFragmentation(blocks);
+    }
+
+    private static MemoryBlock findWorstFit(List<MemoryBlock> blocks, int processSize) {
+        MemoryBlock worstBlock = null;
+
+        for (MemoryBlock block : blocks) {
+            if (block.free && block.size >= processSize) {
+                if (worstBlock == null || block.size > worstBlock.size) {
+                    worstBlock = block;
+                }
+            }
+        }
+
+        return worstBlock;
+    }
+    private static void printMemoryMap(List<MemoryBlock> blocks) {
+        System.out.println("\nMemory Map:");
+        for (MemoryBlock block : blocks) {
+            if (block.free) {
+                System.out.println("Block " + block.id + " | Size: " + block.size + " | FREE");
+            } else {
+                int waste = block.size - block.processSize;
+                System.out.println("Block " + block.id + " | Size: " + block.size +
+                        " | Process " + block.processId + " | Waste: " + waste);
+            }
+        }
+    }
+
+    private static void printFragmentation(List<MemoryBlock> blocks) {
+        int internalFrag = 0;
+        int externalFrag = 0;
+
+        for (MemoryBlock block : blocks) {
+            if (block.free) {
+                externalFrag += block.size;
+            } else {
+                internalFrag += (block.size - block.processSize);
+            }
+        }
+
+        System.out.println("\nInternal fragmentation: " + internalFrag);
+        System.out.println("External fragmentation: " + externalFrag);
     }
 }
