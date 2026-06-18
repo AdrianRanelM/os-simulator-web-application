@@ -180,4 +180,5 @@ public class MemoryManagement {
         System.out.println("\nInternal fragmentation: " + internalFrag);
         System.out.println("External fragmentation: " + externalFrag);
     }
+
 }
