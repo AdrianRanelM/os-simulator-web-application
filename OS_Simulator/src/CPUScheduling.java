@@ -100,8 +100,77 @@ public class CPUScheduling {
     }
 
     public static void runSJF(List<Process> processes) {
-        System.out.println("[STUB] SJF scheduling not implemented yet.");
-        // TODO: at each free slot, pick arrived process with min burst time
+        System.out.println("\n--- SJF (Non-preemptive) Scheduling ---");
+        
+        if (processes == null || processes.isEmpty()) {
+            System.out.println("No processes to schedule.");
+            return;
+        }
+
+        int n = processes.size();
+        List<Process> completedProcesses = new ArrayList<>();
+        boolean[] isCompleted = new boolean[n];
+        
+        int currentTime = 0;
+        int totalWaitingTime = 0;
+        int totalTurnaroundTime = 0;
+        
+        System.out.println("\nGantt Chart Timeline:");
+        System.out.print("|");
+        
+        while (completedProcesses.size() < n) {
+            int idx = -1;
+            int minBurst = Integer.MAX_VALUE;
+            
+            // Find the arrived process with the minimum burst time
+            for (int i = 0; i < n; i++) {
+                Process p = processes.get(i);
+                if (p.arrivalTime <= currentTime && !isCompleted[i]) {
+                    if (p.burstTime < minBurst) {
+                        minBurst = p.burstTime;
+                        idx = i;
+                    }
+                    // Tie-breaker: If burst times are equal, pick the one that arrived first
+                    else if (p.burstTime == minBurst) {
+                        if (p.arrivalTime < processes.get(idx).arrivalTime) {
+                            idx = i;
+                        }
+                    }
+                }
+            }
+            
+            // If no process has arrived yet, CPU is idle until the next closest arrival
+            if (idx == -1) {
+                int nextArrivalTime = Integer.MAX_VALUE;
+                for (int i = 0; i < n; i++) {
+                    if (!isCompleted[i] && processes.get(i).arrivalTime < nextArrivalTime) {
+                        nextArrivalTime = processes.get(i).arrivalTime;
+                    }
+                }
+                System.out.print(" IDLE (" + (nextArrivalTime - currentTime) + "s) |");
+                currentTime = nextArrivalTime;
+                continue;
+            }
+            
+            // Execute the selected shortest job
+            Process p = processes.get(idx);
+            System.out.print(" P" + p.pid + " (" + p.burstTime + "s) |");
+            
+            currentTime += p.burstTime;
+            p.completionTime = currentTime;
+            p.turnaroundTime = p.completionTime - p.arrivalTime;
+            p.waitingTime = p.turnaroundTime - p.burstTime;
+            
+            totalWaitingTime += p.waitingTime;
+            totalTurnaroundTime += p.turnaroundTime;
+            
+            isCompleted[idx] = true;
+            completedProcesses.add(p);
+        }
+        System.out.println(" (End: " + currentTime + "s)");
+        
+        // Print the evaluation metrics table using our shared helper method
+        printSchedulingTable(completedProcesses, totalWaitingTime, totalTurnaroundTime);
     }
 
     public static void runRoundRobin(List<Process> processes, int quantum) {
