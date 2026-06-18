@@ -39,8 +39,64 @@ public class CPUScheduling {
     }
 
     public static void runFCFS(List<Process> processes) {
-        System.out.println("[STUB] FCFS scheduling not implemented yet.");
-        // TODO: sort by arrival time, calculate completion/waiting/turnaround
+        System.out.println("\n--- FCFS Scheduling ---");
+        
+        if (processes == null || processes.isEmpty()) {
+            System.out.println("No processes to schedule.");
+            return;
+        }
+
+        // 1. Sort processes by arrivalTime using your original field name
+        processes.sort((p1, p2) -> Integer.compare(p1.arrivalTime, p2.arrivalTime));
+        
+        int currentTime = 0;
+        int totalWaitingTime = 0;
+        int totalTurnaroundTime = 0;
+        
+        System.out.println("\nGantt Chart Timeline:");
+        System.out.print("|");
+        
+        for (Process p : processes) {
+            // If the CPU is idle waiting for the next process to arrive
+            if (currentTime < p.arrivalTime) {
+                System.out.print(" IDLE (" + (p.arrivalTime - currentTime) + "s) |");
+                currentTime = p.arrivalTime;
+            }
+            
+            // Execute current process using p.pid and p.burstTime
+            System.out.print(" P" + p.pid + " (" + p.burstTime + "s) |");
+            
+            currentTime += p.burstTime;
+            p.completionTime = currentTime;
+            p.turnaroundTime = p.completionTime - p.arrivalTime;
+            p.waitingTime = p.turnaroundTime - p.burstTime;
+            
+            // Accumulate totals for averages
+            totalWaitingTime += p.waitingTime;
+            totalTurnaroundTime += p.turnaroundTime;
+        }
+        System.out.println(" (End: " + currentTime + "s)");
+        
+        // 2. Display the evaluation results table
+        printSchedulingTable(processes, totalWaitingTime, totalTurnaroundTime);
+    }
+
+    private static void printSchedulingTable(List<Process> processes, int totalWT, int totalTAT) {
+        System.out.println("\nProcess\tArrival\tBurst\tPriority\tExit\tTurnaround\tWaiting");
+        for (Process p : processes) {
+            System.out.println("P" + p.pid + "\t" + 
+                               p.arrivalTime + "\t" + 
+                               p.burstTime + "\t" + 
+                               p.priority + "\t\t" + 
+                               p.completionTime + "\t" + 
+                               p.turnaroundTime + "\t\t" + 
+                               p.waitingTime);
+        }
+        
+        double avgWT = (double) totalWT / processes.size();
+        double avgTAT = (double) totalTAT / processes.size();
+        System.out.printf("\nAverage Waiting Time: %.2f\n", avgWT);
+        System.out.printf("Average Turnaround Time: %.2f\n", avgTAT);
     }
 
     public static void runSJF(List<Process> processes) {
