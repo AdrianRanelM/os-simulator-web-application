@@ -36,8 +36,53 @@ public class VirtualMemory {
     }
 
     public static void runFIFO(List<Integer> referenceString, int numFrames) {
-        System.out.println("[STUB] FIFO page replacement not implemented yet.");
-        // TODO: queue of frames, evict oldest on fault
+        System.out.println("\n--- FIFO Page Replacement ---");
+        System.out.println("Reference String: " + referenceString);
+        System.out.println("Number of Frames: " + numFrames + "\n");
+
+        List<Integer> frames = new ArrayList<>();
+        java.util.Queue<Integer> fifoQueue = new java.util.LinkedList<>();
+        
+        int pageFaults = 0;
+
+        // Print table header
+        System.out.print("Page\t| Memory Frames\t\t| Status\n");
+        System.out.println("-----------------------------------------");
+
+        for (int page : referenceString) {
+            System.out.print(page + "\t| ");
+            String status;
+
+            // 1. Page Hit: Page is already present in frames
+            if (frames.contains(page)) {
+                status = "Hit";
+            } 
+            // 2. Page Fault: Page is missing
+            else {
+                pageFaults++;
+                status = "Fault";
+
+                // Memory still has free space
+                if (frames.size() < numFrames) {
+                    frames.add(page);
+                    fifoQueue.add(page);
+                } 
+                // Memory is full -> Evict the oldest page (FIFO)
+                else {
+                    int oldest = fifoQueue.poll(); // Get and remove oldest page
+                    int indexToReplace = frames.indexOf(oldest);
+                    frames.set(indexToReplace, page); // Replace in frame layout
+                    fifoQueue.add(page); // Add new page to track arrival order
+                }
+            }
+
+            // Print current frame layout nicely
+            System.out.print(frames + "\t".repeat(Math.max(1, 3 - frames.size())) + "| " + status + "\n");
+        }
+
+        System.out.println("-----------------------------------------");
+        System.out.println("Total Page Faults: " + pageFaults);
+        System.out.println("Total Page Hits: " + (referenceString.size() - pageFaults));
     }
 
     public static void runLRU(List<Integer> referenceString, int numFrames) {
