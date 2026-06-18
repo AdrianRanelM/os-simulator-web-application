@@ -45,8 +45,36 @@ public class MemoryManagement {
     }
 
     public static void runFirstFit(List<MemoryBlock> blocks, List<Integer> processSizes) {
-        System.out.println("[STUB] First Fit allocation not implemented yet.");
-        // TODO: for each process, allocate to first free block with size >= process size
+        System.out.println("\n--- First Fit Allocation ---");
+
+        for (int i = 0; i < processSizes.size(); i++) {
+            int processSize = processSizes.get(i);
+            int processId = i + 1;
+
+            MemoryBlock block = findFirstFit(blocks, processSize);
+
+            if (block != null) {
+                block.free = false;
+                block.processId = processId;
+                block.processSize = processSize;
+                System.out.println("Process " + processId + " (" + processSize + ") -> Block " + block.id);
+            } else {
+                System.out.println("Process " + processId + " (" + processSize + ") -> NOT PLACED (no suitable block)");
+            }
+        }
+
+        printMemoryMap(blocks);
+        printFragmentation(blocks);
+    }
+
+    private static MemoryBlock findFirstFit(List<MemoryBlock> blocks, int processSize) {
+        for (MemoryBlock block : blocks) {
+            if (block.free && block.size >= processSize) {
+                return block;
+            }
+        }
+        return null;
+
     }
 
     public static void runBestFit(List<MemoryBlock> blocks, List<Integer> processSizes) {
