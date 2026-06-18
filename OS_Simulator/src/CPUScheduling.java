@@ -11,7 +11,7 @@ public class CPUScheduling {
     public static void menu(Scanner scanner) {
         System.out.println("\n--- CPU Scheduling ---");
         System.out.println("1. FCFS");
-        System.out.println("2. SJF (Non-preemptive)");
+        System.out.println("2. SJF ");
         System.out.println("3. Round Robin");
         System.out.println("4. Priority");
         System.out.println("0. Back to main menu");
@@ -100,7 +100,7 @@ public class CPUScheduling {
     }
 
     public static void runSJF(List<Process> processes) {
-        System.out.println("\n--- SJF (Non-preemptive) Scheduling ---");
+        System.out.println("\n--- SJF Scheduling ---");
         
         if (processes == null || processes.isEmpty()) {
             System.out.println("No processes to schedule.");
