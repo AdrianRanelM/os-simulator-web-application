@@ -86,8 +86,67 @@ public class VirtualMemory {
     }
 
     public static void runLRU(List<Integer> referenceString, int numFrames) {
-        System.out.println("[STUB] LRU page replacement not implemented yet.");
-        // TODO: track last-used time per page, evict least recently used on fault
+        System.out.println("\n--- LRU Page Replacement ---");
+        System.out.println("Reference String: " + referenceString);
+        System.out.println("Number of Frames: " + numFrames + "\n");
+
+        List<Integer> frames = new ArrayList<>();
+        // Tracks the order of recent usage (end of list = most recently used)
+        List<Integer> recentUsage = new ArrayList<>();
+        
+        int pageFaults = 0;
+
+        System.out.print("Page\t| Memory Frames\t\t| Status\n");
+        System.out.println("-----------------------------------------");
+
+        for (int page : referenceString) {
+            System.out.print(page + "\t| ");
+            String status;
+
+            // 1. Page Hit
+            if (frames.contains(page)) {
+                status = "Hit";
+                // Move the page to the end of recentUsage to mark it as newest
+                recentUsage.remove((Integer) page);
+                recentUsage.add(page);
+            } 
+            // 2. Page Fault
+            else {
+                pageFaults++;
+                status = "Fault";
+
+                // If there's open space in frames
+                if (frames.size() < numFrames) {
+                    frames.add(page);
+                    recentUsage.add(page);
+                } 
+                // Memory is full -> Evict Least Recently Used
+                else {
+                    // Find which page in 'frames' appears first (oldest usage) in recentUsage
+                    int lruPage = -1;
+                    for (int uPage : recentUsage) {
+                        if (frames.contains(uPage)) {
+                            lruPage = uPage;
+                            break; // First one found is the least recently used
+                        }
+                    }
+
+                    int indexToReplace = frames.indexOf(lruPage);
+                    frames.set(indexToReplace, page);
+                    
+                    // Update usage tracker
+                    recentUsage.remove((Integer) lruPage);
+                    recentUsage.add(page);
+                }
+            }
+
+            // Print layout
+            System.out.print(frames + "\t".repeat(Math.max(1, 3 - frames.size())) + "| " + status + "\n");
+        }
+
+        System.out.println("-----------------------------------------");
+        System.out.println("Total Page Faults: " + pageFaults);
+        System.out.println("Total Page Hits: " + (referenceString.size() - pageFaults));
     }
 
     public static void runOptimal(List<Integer> referenceString, int numFrames) {
