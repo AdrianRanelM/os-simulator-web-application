@@ -150,7 +150,75 @@ public class VirtualMemory {
     }
 
     public static void runOptimal(List<Integer> referenceString, int numFrames) {
-        System.out.println("[STUB] Optimal page replacement not implemented yet.");
-        // TODO: evict page used farthest in the future (or never again) on fault
+        System.out.println("\n--- Optimal Page Replacement ---");
+        System.out.println("Reference String: " + referenceString);
+        System.out.println("Number of Frames: " + numFrames + "\n");
+
+        List<Integer> frames = new ArrayList<>();
+        int pageFaults = 0;
+
+        System.out.print("Page\t| Memory Frames\t\t| Status\n");
+        System.out.println("-----------------------------------------");
+
+        for (int i = 0; i < referenceString.size(); i++) {
+            int page = referenceString.get(i);
+            System.out.print(page + "\t| ");
+            String status;
+
+            // 1. Page Hit
+            if (frames.contains(page)) {
+                status = "Hit";
+            } 
+            // 2. Page Fault
+            else {
+                pageFaults++;
+                status = "Fault";
+
+                // Space available
+                if (frames.size() < numFrames) {
+                    frames.add(page);
+                } 
+                // Memory full -> Look into the future to find the best page to evict
+                else {
+                    int indexToReplace = -1;
+                    int farthestFutureUse = -1;
+
+                    for (int f = 0; f < frames.size(); f++) {
+                        int currentFramePage = frames.get(f);
+                        int nextUseIndex = Integer.MAX_VALUE; // Default to infinity if never used again
+
+                        // Scan ahead in reference string
+                        for (int j = i + 1; j < referenceString.size(); j++) {
+                            if (referenceString.get(j) == currentFramePage) {
+                                nextUseIndex = j;
+                                break;
+                            }
+                        }
+
+                        // If this page is never used again, evict it immediately
+                        if (nextUseIndex == Integer.MAX_VALUE) {
+                            indexToReplace = f;
+                            break;
+                        }
+
+                        // Track the page that is used farthest in the future
+                        if (nextUseIndex > farthestFutureUse) {
+                            farthestFutureUse = nextUseIndex;
+                            indexToReplace = f;
+                        }
+                    }
+
+                    // Replace the optimal target page
+                    frames.set(indexToReplace, page);
+                }
+            }
+
+            // Print layout
+            System.out.print(frames + "\t".repeat(Math.max(1, 3 - frames.size())) + "| " + status + "\n");
+        }
+
+        System.out.println("-----------------------------------------");
+        System.out.println("Total Page Faults: " + pageFaults);
+        System.out.println("Total Page Hits: " + (referenceString.size() - pageFaults));
     }
 }
