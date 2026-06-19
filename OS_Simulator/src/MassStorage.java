@@ -200,19 +200,38 @@ public class MassStorage {
         int current = headStart;
         int totalMovement = 0;
 
-        for (int track : larger) {
-            totalMovement += Math.abs(track - current);
-            current = track;
-            sequence.add(current);
-        }
+        // Utilize the direction parameter
 
-        for (int i = smaller.size() - 1; i >= 0; i--) {
-            int track = smaller.get(i);
-            totalMovement += Math.abs(track - current);
-            current = track;
-            sequence.add(current);
+        if (direction.equalsIgnoreCase("right")) {
+            // Go right first (larger tracks)
+            for (int track : larger) {
+                totalMovement += Math.abs(track - current);
+                current = track;
+                sequence.add(current);
+            }
+            // Reverse and go left (smaller tracks, highest to lowest)
+            for (int i = smaller.size() - 1; i >= 0; i--) {
+                int track = smaller.get(i);
+                totalMovement += Math.abs(track - current);
+                current = track;
+                sequence.add(current);
+            }
+            // Inside the 'else' block for LEFT direction in runLOOK:
+        } else {
+            // 1. Go left first (smaller tracks, sorted highest to lowest)
+            for (int i = smaller.size() - 1; i >= 0; i--) {
+                int track = smaller.get(i);
+                totalMovement += Math.abs(track - current);
+                current = track;
+                sequence.add(current);
+            }
+            // 2. Reverse direction and go right (larger tracks, sorted lowest to highest)
+            for (int track : larger) {
+                totalMovement += Math.abs(track - current);
+                current = track;
+                sequence.add(current);
+            }
         }
-
         printResult(sequence, totalMovement);
     }
 
@@ -243,16 +262,39 @@ public class MassStorage {
             sequence.add(current);
         }
 
-        if (!smaller.isEmpty()) {
-            totalMovement += Math.abs(smaller.get(0) - current);
-            current = smaller.get(0);
-            sequence.add(current);
-
-            for (int i = 1; i < smaller.size(); i++) {
+        if (direction.equalsIgnoreCase("right")) {
+            // Service larger tracks heading Right (e.g., 50 -> 65 -> 67 -> 98 -> 122 -> 124 -> 183)
+            for (int track : larger) {
+                totalMovement += Math.abs(track - current);
+                current = track;
+                sequence.add(current);
+            }
+            // Circular Jump: Wrap around to the absolute lowest track on the left (e.g., 14)
+            // Then continue moving Right (e.g., 14 -> 37)
+            if (!smaller.isEmpty()) {
+                for (int track : smaller) {
+                    totalMovement += Math.abs(track - current);
+                    current = track;
+                    sequence.add(current);
+                }
+            }
+        } else {
+            // Service smaller tracks heading Left (e.g., 50 -> 37 -> 14)
+            for (int i = smaller.size() - 1; i >= 0; i--) {
                 int track = smaller.get(i);
                 totalMovement += Math.abs(track - current);
                 current = track;
                 sequence.add(current);
+            }
+            // Circular Jump: Wrap around to the absolute highest track on the right (e.g., 183)
+            // Then continue moving Left (e.g., 183 -> 124 -> 122 -> 98 -> 67 -> 65)
+            if (!larger.isEmpty()) {
+                for (int i = larger.size() - 1; i >= 0; i--) {
+                    int track = larger.get(i);
+                    totalMovement += Math.abs(track - current);
+                    current = track;
+                    sequence.add(current);
+                }
             }
         }
 
