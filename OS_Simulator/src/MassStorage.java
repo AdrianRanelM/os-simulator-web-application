@@ -136,8 +136,47 @@ public class MassStorage {
     }
 
     public static void runCSCAN(List<DiskRequest> requests, int headStart, int diskSize) {
-        System.out.println("[STUB] C-SCAN disk scheduling not implemented yet.");
-        // TODO: sweep one direction, jump to track 0 after reaching end
+        System.out.println("\n--- C-SCAN Disk Scheduling ---");
+
+        List<Integer> smaller = new ArrayList<>();
+        List<Integer> larger = new ArrayList<>();
+
+        for (DiskRequest req : requests) {
+            if (req.trackNumber < headStart) {
+                smaller.add(req.trackNumber);
+            } else {
+                larger.add(req.trackNumber);
+            }
+        }
+
+        java.util.Collections.sort(smaller);
+        java.util.Collections.sort(larger);
+
+        List<Integer> sequence = new ArrayList<>();
+        int current = headStart;
+        int totalMovement = 0;
+
+        for (int track : larger) {
+            totalMovement += Math.abs(track - current);
+            current = track;
+            sequence.add(current);
+        }
+
+        totalMovement += Math.abs((diskSize - 1) - current);
+        current = diskSize - 1;
+        sequence.add(current);
+
+        totalMovement += Math.abs(0 - current);
+        current = 0;
+        sequence.add(current);
+
+        for (int track : smaller) {
+            totalMovement += Math.abs(track - current);
+            current = track;
+            sequence.add(current);
+        }
+
+        printResult(sequence, totalMovement);
     }
 
     public static void runLOOK(List<DiskRequest> requests, int headStart, String direction) {
