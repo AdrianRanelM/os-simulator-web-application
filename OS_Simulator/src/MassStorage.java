@@ -74,8 +74,8 @@ public class MassStorage {
         List<Integer> sequence = new ArrayList<>();
 
         while (!remaining.isEmpty()) {
-            DiskRequest nearest = null;
-            int minDistance = Integer.MAX_VALUE;
+            DiskRequest nearest = remaining.get(0);
+            int minDistance = Math.abs(nearest.trackNumber - current);
 
             for (DiskRequest req : remaining) {
                 int distance = Math.abs(req.trackNumber - current);
@@ -166,7 +166,7 @@ public class MassStorage {
         current = diskSize - 1;
         sequence.add(current);
 
-        totalMovement += Math.abs(0 - current);
+        totalMovement += Math.abs(- current);
         current = 0;
         sequence.add(current);
 
