@@ -66,8 +66,32 @@ public class MassStorage {
     }
 
     public static void runSSTF(List<DiskRequest> requests, int headStart) {
-        System.out.println("[STUB] SSTF disk scheduling not implemented yet.");
-        // TODO: repeatedly pick nearest unvisited request to current head
+        System.out.println("\n--- SSTF Disk Scheduling ---");
+
+        List<DiskRequest> remaining = new ArrayList<>(requests);
+        int current = headStart;
+        int totalMovement = 0;
+        List<Integer> sequence = new ArrayList<>();
+
+        while (!remaining.isEmpty()) {
+            DiskRequest nearest = null;
+            int minDistance = Integer.MAX_VALUE;
+
+            for (DiskRequest req : remaining) {
+                int distance = Math.abs(req.trackNumber - current);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    nearest = req;
+                }
+            }
+
+            totalMovement += minDistance;
+            current = nearest.trackNumber;
+            sequence.add(current);
+            remaining.remove(nearest);
+        }
+
+        printResult(sequence, totalMovement);
     }
 
     public static void runSCAN(List<DiskRequest> requests, int headStart, int diskSize) {
