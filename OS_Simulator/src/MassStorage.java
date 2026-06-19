@@ -217,8 +217,45 @@ public class MassStorage {
     }
 
     public static void runCLOOK(List<DiskRequest> requests, int headStart, String direction) {
-        System.out.println("[STUB] C-LOOK disk scheduling not implemented yet.");
-        // TODO: sweep one direction servicing requests, then jump to the SMALLEST
-        //       remaining request (not track 0) and continue sweeping
+        System.out.println("\n--- C-LOOK Disk Scheduling ---");
+
+        List<Integer> smaller = new ArrayList<>();
+        List<Integer> larger = new ArrayList<>();
+
+        for (DiskRequest req : requests) {
+            if (req.trackNumber < headStart) {
+                smaller.add(req.trackNumber);
+            } else {
+                larger.add(req.trackNumber);
+            }
+        }
+
+        java.util.Collections.sort(smaller);
+        java.util.Collections.sort(larger);
+
+        List<Integer> sequence = new ArrayList<>();
+        int current = headStart;
+        int totalMovement = 0;
+
+        for (int track : larger) {
+            totalMovement += Math.abs(track - current);
+            current = track;
+            sequence.add(current);
+        }
+
+        if (!smaller.isEmpty()) {
+            totalMovement += Math.abs(smaller.get(0) - current);
+            current = smaller.get(0);
+            sequence.add(current);
+
+            for (int i = 1; i < smaller.size(); i++) {
+                int track = smaller.get(i);
+                totalMovement += Math.abs(track - current);
+                current = track;
+                sequence.add(current);
+            }
+        }
+
+        printResult(sequence, totalMovement);
     }
 }
