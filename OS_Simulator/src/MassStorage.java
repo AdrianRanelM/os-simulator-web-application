@@ -22,23 +22,38 @@ public class MassStorage {
         int choice = Integer.parseInt(scanner.nextLine().trim());
 
         switch (choice) {
-            case 1 -> runFCFS(getSampleRequests(), 50);
-            case 2 -> runSSTF(getSampleRequests(), 50);
-            case 3 -> runSCAN(getSampleRequests(), 50, 200);
-            case 4 -> runCSCAN(getSampleRequests(), 50, 200);
-            case 5 -> runLOOK(getSampleRequests(), 50, "right");
-            case 6 -> runCLOOK(getSampleRequests(), 50, "right");
+            case 1 -> runFCFS(getUserRequests(scanner), getHeadStart(scanner));
+            case 2 -> runSSTF(getUserRequests(scanner), getHeadStart(scanner));
+            case 3 -> runSCAN(getUserRequests(scanner), getHeadStart(scanner), 200);
+            case 4 -> runCSCAN(getUserRequests(scanner), getHeadStart(scanner), 200);
+            case 5 -> runLOOK(getUserRequests(scanner), getHeadStart(scanner), getDirection(scanner));
+            case 6 -> runCLOOK(getUserRequests(scanner), getHeadStart(scanner), getDirection(scanner));
             case 0 -> System.out.println("Returning to main menu...");
             default -> System.out.println("Invalid choice.");
         }
     }
 
-    // TODO: replace with real user input later
-    private static List<DiskRequest> getSampleRequests() {
+    private static List<DiskRequest> getUserRequests(Scanner scanner) {
+        System.out.print("How many disk requests? ");
+        int numRequests = Integer.parseInt(scanner.nextLine().trim());
+
         List<DiskRequest> requests = new ArrayList<>();
-        int[] sample = {98, 183, 37, 122, 14, 124, 65, 67};
-        for (int t : sample) requests.add(new DiskRequest(t));
+        for (int i = 1; i <= numRequests; i++) {
+            System.out.print("Track number for request " + i + ": ");
+            int track = Integer.parseInt(scanner.nextLine().trim());
+            requests.add(new DiskRequest(track));
+        }
         return requests;
+    }
+
+    private static int getHeadStart(Scanner scanner) {
+        System.out.print("Initial head position: ");
+        return Integer.parseInt(scanner.nextLine().trim());
+    }
+
+    private static String getDirection(Scanner scanner) {
+        System.out.print("Initial direction (right/left): ");
+        return scanner.nextLine().trim();
     }
 
     public static void runFCFS(List<DiskRequest> requests, int headStart) {
@@ -166,7 +181,7 @@ public class MassStorage {
         current = diskSize - 1;
         sequence.add(current);
 
-        totalMovement += Math.abs(- current);
+        totalMovement += Math.abs(-current);
         current = 0;
         sequence.add(current);
 
@@ -200,8 +215,6 @@ public class MassStorage {
         int current = headStart;
         int totalMovement = 0;
 
-        // Utilize the direction parameter
-
         if (direction.equalsIgnoreCase("right")) {
             // Go right first (larger tracks)
             for (int track : larger) {
@@ -216,22 +229,22 @@ public class MassStorage {
                 current = track;
                 sequence.add(current);
             }
-            // Inside the 'else' block for LEFT direction in runLOOK:
         } else {
-            // 1. Go left first (smaller tracks, sorted highest to lowest)
+            // Go left first (smaller tracks, highest to lowest)
             for (int i = smaller.size() - 1; i >= 0; i--) {
                 int track = smaller.get(i);
                 totalMovement += Math.abs(track - current);
                 current = track;
                 sequence.add(current);
             }
-            // 2. Reverse direction and go right (larger tracks, sorted lowest to highest)
+            // Reverse and go right (larger tracks, lowest to highest)
             for (int track : larger) {
                 totalMovement += Math.abs(track - current);
                 current = track;
                 sequence.add(current);
             }
         }
+
         printResult(sequence, totalMovement);
     }
 
@@ -256,21 +269,15 @@ public class MassStorage {
         int current = headStart;
         int totalMovement = 0;
 
-        for (int track : larger) {
-            totalMovement += Math.abs(track - current);
-            current = track;
-            sequence.add(current);
-        }
-
         if (direction.equalsIgnoreCase("right")) {
-            // Service larger tracks heading Right (e.g., 50 -> 65 -> 67 -> 98 -> 122 -> 124 -> 183)
+            // Service larger tracks heading right (e.g., 50 -> 65 -> 67 -> 98 -> 122 -> 124 -> 183)
             for (int track : larger) {
                 totalMovement += Math.abs(track - current);
                 current = track;
                 sequence.add(current);
             }
-            // Circular Jump: Wrap around to the absolute lowest track on the left (e.g., 14)
-            // Then continue moving Right (e.g., 14 -> 37)
+            // Circular jump: wrap around to the smallest remaining track on the left
+            // Then continue moving right (e.g., 14 -> 37)
             if (!smaller.isEmpty()) {
                 for (int track : smaller) {
                     totalMovement += Math.abs(track - current);
@@ -279,15 +286,15 @@ public class MassStorage {
                 }
             }
         } else {
-            // Service smaller tracks heading Left (e.g., 50 -> 37 -> 14)
+            // Service smaller tracks heading left (e.g., 50 -> 37 -> 14)
             for (int i = smaller.size() - 1; i >= 0; i--) {
                 int track = smaller.get(i);
                 totalMovement += Math.abs(track - current);
                 current = track;
                 sequence.add(current);
             }
-            // Circular Jump: Wrap around to the absolute highest track on the right (e.g., 183)
-            // Then continue moving Left (e.g., 183 -> 124 -> 122 -> 98 -> 67 -> 65)
+            // Circular jump: wrap around to the largest remaining track on the right
+            // Then continue moving left (e.g., 183 -> 124 -> 122 -> 98 -> 67 -> 65)
             if (!larger.isEmpty()) {
                 for (int i = larger.size() - 1; i >= 0; i--) {
                     int track = larger.get(i);

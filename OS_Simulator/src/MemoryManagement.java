@@ -19,28 +19,38 @@ public class MemoryManagement {
         int choice = Integer.parseInt(scanner.nextLine().trim());
 
         switch (choice) {
-            case 1 -> runFirstFit(getSampleBlocks(), getSampleProcessSizes());
-            case 2 -> runBestFit(getSampleBlocks(), getSampleProcessSizes());
-            case 3 -> runWorstFit(getSampleBlocks(), getSampleProcessSizes());
+            case 1 -> runFirstFit(getUserBlocks(scanner), getUserProcessSizes(scanner));
+            case 2 -> runBestFit(getUserBlocks(scanner), getUserProcessSizes(scanner));
+            case 3 -> runWorstFit(getUserBlocks(scanner), getUserProcessSizes(scanner));
             case 0 -> System.out.println("Returning to main menu...");
             default -> System.out.println("Invalid choice.");
         }
     }
 
     // TODO: replace with real user input later
-    private static List<MemoryBlock> getSampleBlocks() {
+    private static List<MemoryBlock> getUserBlocks(Scanner scanner) {
+        System.out.print("How many memory blocks? ");
+        int numBlocks = Integer.parseInt(scanner.nextLine().trim());
+
         List<MemoryBlock> blocks = new ArrayList<>();
-        blocks.add(new MemoryBlock(1, 100));
-        blocks.add(new MemoryBlock(2, 500));
-        blocks.add(new MemoryBlock(3, 200));
+        for (int i = 1; i <= numBlocks; i++) {
+            System.out.print("Size of Block " + i + ": ");
+            int size = Integer.parseInt(scanner.nextLine().trim());
+            blocks.add(new MemoryBlock(i, size));
+        }
         return blocks;
     }
 
-    private static List<Integer> getSampleProcessSizes() {
+    private static List<Integer> getUserProcessSizes(Scanner scanner) {
+        System.out.print("How many processes? ");
+        int numProcesses = Integer.parseInt(scanner.nextLine().trim());
+
         List<Integer> sizes = new ArrayList<>();
-        sizes.add(212);
-        sizes.add(417);
-        sizes.add(112);
+        for (int i = 1; i <= numProcesses; i++) {
+            System.out.print("Size of Process " + i + ": ");
+            int size = Integer.parseInt(scanner.nextLine().trim());
+            sizes.add(size);
+        }
         return sizes;
     }
 
