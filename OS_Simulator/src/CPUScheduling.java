@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Scanner;
 
@@ -15,17 +16,15 @@ public class CPUScheduling {
         System.out.println("3. Round Robin");
         System.out.println("4. Priority");
         System.out.println("0. Back to main menu");
-        System.out.print("Choose: ");
 
-        int choice = Integer.parseInt(scanner.nextLine().trim());
+        int choice = readInt(scanner, "Choose: ");
 
         switch (choice) {
             case 1 -> runFCFS(getUserProcesses(scanner));
             case 2 -> runSJF(getUserProcesses(scanner));
             case 3 -> {
                 List<Process> processes = getUserProcesses(scanner);
-                System.out.print("Time quantum: ");
-                int quantum = Integer.parseInt(scanner.nextLine().trim());
+                int quantum = readPositiveInt(scanner, "Time quantum: ");
                 runRoundRobin(processes, quantum);
             }
             case 4 -> runPriority(getUserProcesses(scanner));
@@ -34,23 +33,60 @@ public class CPUScheduling {
         }
     }
 
+    // ---------- Input helpers ----------
+
+    /** Reads an integer, re-prompting on invalid (non-numeric) input. */
+    private static int readInt(Scanner scanner, String prompt) {
+        while (true) {
+            System.out.print(prompt);
+            String line = scanner.nextLine().trim();
+            try {
+                return Integer.parseInt(line);
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid number, please try again.");
+            }
+        }
+    }
+
+    /** Reads an integer >= 0, re-prompting on invalid or negative input. */
+    private static int readNonNegativeInt(Scanner scanner, String prompt) {
+        while (true) {
+            int value = readInt(scanner, prompt);
+            if (value < 0) {
+                System.out.println("Value cannot be negative, please try again.");
+                continue;
+            }
+            return value;
+        }
+    }
+
+    /** Reads an integer >= 1, re-prompting on invalid, zero, or negative input. */
+    private static int readPositiveInt(Scanner scanner, String prompt) {
+        while (true) {
+            int value = readInt(scanner, prompt);
+            if (value <= 0) {
+                System.out.println("Value must be greater than 0, please try again.");
+                continue;
+            }
+            return value;
+        }
+    }
+
     private static List<Process> getUserProcesses(Scanner scanner) {
-        System.out.print("How many processes? ");
-        int numProcesses = Integer.parseInt(scanner.nextLine().trim());
+        int numProcesses = readPositiveInt(scanner, "How many processes? ");
 
         List<Process> processes = new ArrayList<>();
         for (int i = 1; i <= numProcesses; i++) {
             System.out.println("Process " + i + ":");
-            System.out.print("  Arrival time: ");
-            int arrival = Integer.parseInt(scanner.nextLine().trim());
-            System.out.print("  Burst time: ");
-            int burst = Integer.parseInt(scanner.nextLine().trim());
-            System.out.print("  Priority (lower number = higher priority): ");
-            int priority = Integer.parseInt(scanner.nextLine().trim());
+            int arrival = readNonNegativeInt(scanner, "  Arrival time: ");
+            int burst = readPositiveInt(scanner, "  Burst time: ");
+            int priority = readNonNegativeInt(scanner, "  Priority (lower number = higher priority): ");
             processes.add(new Process(i, arrival, burst, priority));
         }
         return processes;
     }
+
+    // ---------- FCFS ----------
 
     public static void runFCFS(List<Process> processes) {
         System.out.println("\n--- FCFS Scheduling ---");
@@ -60,7 +96,8 @@ public class CPUScheduling {
             return;
         }
 
-        processes.sort((p1, p2) -> Integer.compare(p1.arrivalTime, p2.arrivalTime));
+        List<Process> sorted = new ArrayList<>(processes);
+        sorted.sort(Comparator.comparingInt(p -> p.arrivalTime));
 
         int currentTime = 0;
         int totalWaitingTime = 0;
@@ -69,7 +106,7 @@ public class CPUScheduling {
         System.out.println("\nGantt Chart Timeline:");
         System.out.print("|");
 
-        for (Process p : processes) {
+        for (Process p : sorted) {
             if (currentTime < p.arrivalTime) {
                 System.out.print(" IDLE (" + (p.arrivalTime - currentTime) + "s) |");
                 currentTime = p.arrivalTime;
@@ -87,7 +124,7 @@ public class CPUScheduling {
         }
         System.out.println(" (End: " + currentTime + "s)");
 
-        printSchedulingTable(processes, totalWaitingTime, totalTurnaroundTime);
+        printSchedulingTable(sorted, totalWaitingTime, totalTurnaroundTime);
     }
 
     private static void printSchedulingTable(List<Process> processes, int totalWT, int totalTAT) {
@@ -107,6 +144,8 @@ public class CPUScheduling {
         System.out.printf("\nAverage Waiting Time: %.2f\n", avgWT);
         System.out.printf("Average Turnaround Time: %.2f\n", avgTAT);
     }
+
+    // ---------- SJF (non-preemptive) ----------
 
     public static void runSJF(List<Process> processes) {
         System.out.println("\n--- SJF Scheduling ---");
@@ -137,11 +176,9 @@ public class CPUScheduling {
                     if (p.burstTime < minBurst) {
                         minBurst = p.burstTime;
                         idx = i;
-                    }
-                    else if (p.burstTime == minBurst) {
-                        if (p.arrivalTime < processes.get(idx).arrivalTime) {
-                            idx = i;
-                        }
+                    } else if (p.burstTime == minBurst && idx != -1
+                            && p.arrivalTime < processes.get(idx).arrivalTime) {
+                        idx = i;
                     }
                 }
             }
@@ -177,6 +214,8 @@ public class CPUScheduling {
         printSchedulingTable(completedProcesses, totalWaitingTime, totalTurnaroundTime);
     }
 
+    // ---------- Round Robin ----------
+
     public static void runRoundRobin(List<Process> processes, int quantum) {
         System.out.println("\n--- Round Robin Scheduling (Quantum: " + quantum + "s) ---");
 
@@ -184,17 +223,29 @@ public class CPUScheduling {
             System.out.println("No processes to schedule.");
             return;
         }
+        if (quantum <= 0) {
+            System.out.println("Quantum must be greater than 0.");
+            return;
+        }
 
-        int n = processes.size();
-        processes.sort((p1, p2) -> Integer.compare(p1.arrivalTime, p2.arrivalTime));
+        List<Process> sorted = new ArrayList<>(processes);
+        sorted.sort(Comparator.comparingInt(p -> p.arrivalTime));
+        int n = sorted.size();
 
         java.util.Queue<Process> readyQueue = new java.util.LinkedList<>();
         List<Process> completedProcesses = new ArrayList<>();
         boolean[] inQueue = new boolean[n];
 
-        int currentTime = processes.get(0).arrivalTime;
-        readyQueue.add(processes.get(0));
-        inQueue[0] = true;
+        int currentTime = sorted.get(0).arrivalTime;
+
+        // Seed the queue with every process that has arrived by currentTime
+        // (handles multiple processes arriving at the same earliest time)
+        for (int i = 0; i < n; i++) {
+            if (sorted.get(i).arrivalTime <= currentTime) {
+                readyQueue.add(sorted.get(i));
+                inQueue[i] = true;
+            }
+        }
 
         int totalWaitingTime = 0;
         int totalTurnaroundTime = 0;
@@ -212,7 +263,7 @@ public class CPUScheduling {
             currentTime += executionTime;
 
             for (int i = 0; i < n; i++) {
-                Process nextP = processes.get(i);
+                Process nextP = sorted.get(i);
                 if (nextP.arrivalTime <= currentTime && !inQueue[i] && nextP.remainingTime > 0) {
                     readyQueue.add(nextP);
                     inQueue[i] = true;
@@ -232,13 +283,25 @@ public class CPUScheduling {
             }
 
             if (readyQueue.isEmpty() && completedProcesses.size() < n) {
+                int nextArrival = Integer.MAX_VALUE;
                 for (int i = 0; i < n; i++) {
-                    if (processes.get(i).remainingTime > 0) {
-                        System.out.print(" IDLE (" + (processes.get(i).arrivalTime - currentTime) + "s) |");
-                        currentTime = processes.get(i).arrivalTime;
-                        readyQueue.add(processes.get(i));
-                        inQueue[i] = true;
-                        break;
+                    if (!inQueue[i] && sorted.get(i).remainingTime > 0
+                            && sorted.get(i).arrivalTime < nextArrival) {
+                        nextArrival = sorted.get(i).arrivalTime;
+                    }
+                }
+
+                if (nextArrival != Integer.MAX_VALUE) {
+                    System.out.print(" IDLE (" + (nextArrival - currentTime) + "s) |");
+                    currentTime = nextArrival;
+
+                    // Add EVERY process that arrives at this time, not just one
+                    for (int i = 0; i < n; i++) {
+                        if (!inQueue[i] && sorted.get(i).remainingTime > 0
+                                && sorted.get(i).arrivalTime == nextArrival) {
+                            readyQueue.add(sorted.get(i));
+                            inQueue[i] = true;
+                        }
                     }
                 }
             }
@@ -247,6 +310,8 @@ public class CPUScheduling {
 
         printSchedulingTable(completedProcesses, totalWaitingTime, totalTurnaroundTime);
     }
+
+    // ---------- Priority (non-preemptive) ----------
 
     public static void runPriority(List<Process> processes) {
         System.out.println("\n--- Priority (Non-preemptive) Scheduling ---");
@@ -277,11 +342,9 @@ public class CPUScheduling {
                     if (p.priority < highestPriority) {
                         highestPriority = p.priority;
                         idx = i;
-                    }
-                    else if (p.priority == highestPriority) {
-                        if (p.arrivalTime < processes.get(idx).arrivalTime) {
-                            idx = i;
-                        }
+                    } else if (p.priority == highestPriority && idx != -1
+                            && p.arrivalTime < processes.get(idx).arrivalTime) {
+                        idx = i;
                     }
                 }
             }
