@@ -57,6 +57,29 @@ public class MassStorage {
         return scanner.nextLine().trim();
     }
 
+    // Counts how many moves went right (+) and left (-) given the full sequence including headStart
+    private static int[] countDirections(int headStart, List<Integer> sequence) {
+        int rightCount = 0;
+        int leftCount  = 0;
+        int current = headStart;
+        for (int next : sequence) {
+            if (next > current) rightCount++;
+            else if (next < current) leftCount++;
+            current = next;
+        }
+        return new int[]{rightCount, leftCount};
+    }
+
+    private static void printResult(int headStart, List<Integer> sequence, int totalMovement) {
+        int[] directions = countDirections(headStart, sequence);
+        System.out.println("Seek sequence: " + sequence);
+        System.out.println("Total head movement: " + totalMovement);
+        double avgSeek = (double) totalMovement / sequence.size();
+        System.out.printf("Average seek length: %.2f%n", avgSeek);
+        System.out.println("Moves to the right:  " + directions[0]);
+        System.out.println("Moves to the left:   " + directions[1]);
+    }
+
     public static void runFCFS(List<DiskRequest> requests, int headStart) {
         System.out.println("\n--- FCFS Disk Scheduling ---");
 
@@ -71,14 +94,7 @@ public class MassStorage {
             sequence.add(current);
         }
 
-        printResult(sequence, totalMovement);
-    }
-
-    private static void printResult(List<Integer> sequence, int totalMovement) {
-        System.out.println("Seek sequence: " + sequence);
-        System.out.println("Total head movement: " + totalMovement);
-        double avgSeek = (double) totalMovement / sequence.size();
-        System.out.printf("Average seek length: %.2f%n", avgSeek);
+        printResult(headStart, sequence, totalMovement);
     }
 
     public static void runSSTF(List<DiskRequest> requests, int headStart) {
@@ -107,21 +123,18 @@ public class MassStorage {
             remaining.remove(nearest);
         }
 
-        printResult(sequence, totalMovement);
+        printResult(headStart, sequence, totalMovement);
     }
 
     public static void runSCAN(List<DiskRequest> requests, int headStart, int diskSize) {
         System.out.println("\n--- SCAN Disk Scheduling ---");
 
         List<Integer> smaller = new ArrayList<>();
-        List<Integer> larger = new ArrayList<>();
+        List<Integer> larger  = new ArrayList<>();
 
         for (DiskRequest req : requests) {
-            if (req.trackNumber < headStart) {
-                smaller.add(req.trackNumber);
-            } else {
-                larger.add(req.trackNumber);
-            }
+            if (req.trackNumber < headStart) smaller.add(req.trackNumber);
+            else                             larger.add(req.trackNumber);
         }
 
         java.util.Collections.sort(smaller);
@@ -148,21 +161,18 @@ public class MassStorage {
             sequence.add(current);
         }
 
-        printResult(sequence, totalMovement);
+        printResult(headStart, sequence, totalMovement);
     }
 
     public static void runCSCAN(List<DiskRequest> requests, int headStart, int diskSize) {
         System.out.println("\n--- C-SCAN Disk Scheduling ---");
 
         List<Integer> smaller = new ArrayList<>();
-        List<Integer> larger = new ArrayList<>();
+        List<Integer> larger  = new ArrayList<>();
 
         for (DiskRequest req : requests) {
-            if (req.trackNumber < headStart) {
-                smaller.add(req.trackNumber);
-            } else {
-                larger.add(req.trackNumber);
-            }
+            if (req.trackNumber < headStart) smaller.add(req.trackNumber);
+            else                             larger.add(req.trackNumber);
         }
 
         java.util.Collections.sort(smaller);
@@ -192,21 +202,18 @@ public class MassStorage {
             sequence.add(current);
         }
 
-        printResult(sequence, totalMovement);
+        printResult(headStart, sequence, totalMovement);
     }
 
     public static void runLOOK(List<DiskRequest> requests, int headStart, String direction) {
         System.out.println("\n--- LOOK Disk Scheduling ---");
 
         List<Integer> smaller = new ArrayList<>();
-        List<Integer> larger = new ArrayList<>();
+        List<Integer> larger  = new ArrayList<>();
 
         for (DiskRequest req : requests) {
-            if (req.trackNumber < headStart) {
-                smaller.add(req.trackNumber);
-            } else {
-                larger.add(req.trackNumber);
-            }
+            if (req.trackNumber < headStart) smaller.add(req.trackNumber);
+            else                             larger.add(req.trackNumber);
         }
 
         java.util.Collections.sort(smaller);
@@ -217,13 +224,11 @@ public class MassStorage {
         int totalMovement = 0;
 
         if (direction.equalsIgnoreCase("right")) {
-            // Go right first (larger tracks)
             for (int track : larger) {
                 totalMovement += Math.abs(track - current);
                 current = track;
                 sequence.add(current);
             }
-            // Reverse and go left (smaller tracks, highest to lowest)
             for (int i = smaller.size() - 1; i >= 0; i--) {
                 int track = smaller.get(i);
                 totalMovement += Math.abs(track - current);
@@ -231,14 +236,12 @@ public class MassStorage {
                 sequence.add(current);
             }
         } else {
-            // Go left first (smaller tracks, highest to lowest)
             for (int i = smaller.size() - 1; i >= 0; i--) {
                 int track = smaller.get(i);
                 totalMovement += Math.abs(track - current);
                 current = track;
                 sequence.add(current);
             }
-            // Reverse and go right (larger tracks, lowest to highest)
             for (int track : larger) {
                 totalMovement += Math.abs(track - current);
                 current = track;
@@ -246,21 +249,18 @@ public class MassStorage {
             }
         }
 
-        printResult(sequence, totalMovement);
+        printResult(headStart, sequence, totalMovement);
     }
 
     public static void runCLOOK(List<DiskRequest> requests, int headStart, String direction) {
         System.out.println("\n--- C-LOOK Disk Scheduling ---");
 
         List<Integer> smaller = new ArrayList<>();
-        List<Integer> larger = new ArrayList<>();
+        List<Integer> larger  = new ArrayList<>();
 
         for (DiskRequest req : requests) {
-            if (req.trackNumber < headStart) {
-                smaller.add(req.trackNumber);
-            } else {
-                larger.add(req.trackNumber);
-            }
+            if (req.trackNumber < headStart) smaller.add(req.trackNumber);
+            else                             larger.add(req.trackNumber);
         }
 
         java.util.Collections.sort(smaller);
@@ -271,14 +271,11 @@ public class MassStorage {
         int totalMovement = 0;
 
         if (direction.equalsIgnoreCase("right")) {
-            // Service larger tracks heading right (e.g., 50 -> 65 -> 67 -> 98 -> 122 -> 124 -> 183)
             for (int track : larger) {
                 totalMovement += Math.abs(track - current);
                 current = track;
                 sequence.add(current);
             }
-            // Circular jump: wrap around to the smallest remaining track on the left
-            // Then continue moving right (e.g., 14 -> 37)
             if (!smaller.isEmpty()) {
                 for (int track : smaller) {
                     totalMovement += Math.abs(track - current);
@@ -287,15 +284,12 @@ public class MassStorage {
                 }
             }
         } else {
-            // Service smaller tracks heading left (e.g., 50 -> 37 -> 14)
             for (int i = smaller.size() - 1; i >= 0; i--) {
                 int track = smaller.get(i);
                 totalMovement += Math.abs(track - current);
                 current = track;
                 sequence.add(current);
             }
-            // Circular jump: wrap around to the largest remaining track on the right
-            // Then continue moving left (e.g., 183 -> 124 -> 122 -> 98 -> 67 -> 65)
             if (!larger.isEmpty()) {
                 for (int i = larger.size() - 1; i >= 0; i--) {
                     int track = larger.get(i);
@@ -306,6 +300,6 @@ public class MassStorage {
             }
         }
 
-        printResult(sequence, totalMovement);
+        printResult(headStart, sequence, totalMovement);
     }
 }
