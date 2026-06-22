@@ -36,9 +36,10 @@ public class MainWindow {
         home.add(subtitle, gbc);
 
         String[][] modules = {
-            {"1", "CPU Scheduling"},
-            {"2", "Memory Management"},
-            {"3", "Virtual Memory"}
+                {"1", "CPU Scheduling"},
+                {"2", "Memory Management"},
+                {"3", "Virtual Memory"},
+                {"4", "Mass Storage"}
         };
 
         gbc.insets = new Insets(8, 60, 8, 60);
@@ -54,15 +55,15 @@ public class MainWindow {
 
             btn.addActionListener(e -> navigateTo(frame, label));
 
-            // Register number key shortcut (1, 2, 3)
+            // Register number key shortcut (1, 2, 3, 4)
             home.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
-                .put(KeyStroke.getKeyStroke(key.charAt(0)), "open_" + key);
+                    .put(KeyStroke.getKeyStroke(key.charAt(0)), "open_" + key);
             home.getActionMap()
-                .put("open_" + key, new AbstractAction() {
-                    @Override public void actionPerformed(java.awt.event.ActionEvent e) {
-                        navigateTo(frame, label);
-                    }
-                });
+                    .put("open_" + key, new AbstractAction() {
+                        @Override public void actionPerformed(java.awt.event.ActionEvent e) {
+                            navigateTo(frame, label);
+                        }
+                    });
 
             gbc.gridy = 2 + i;
             home.add(btn, gbc);
@@ -76,12 +77,13 @@ public class MainWindow {
             case "CPU Scheduling"    -> new CPUSchedulingPanel();
             case "Memory Management" -> new MemoryManagementPanel();
             case "Virtual Memory"    -> new VirtualMemoryPanel();
+            case "Mass Storage"      -> new MassStoragePanel();
             default -> null;
         };
         if (modulePanel == null) return;
 
         // Back button
-        JButton backBtn = new JButton("← Back to Home");
+        JButton backBtn = new JButton("< Back to Home");
         backBtn.setFont(new Font("SansSerif", Font.PLAIN, 13));
         backBtn.addActionListener(e -> {
             frame.getContentPane().removeAll();
